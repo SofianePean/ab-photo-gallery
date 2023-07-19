@@ -8,6 +8,8 @@ export const metadata: Metadata = {
     "Des shootings photo et vidéos captivants. Donnez vie à vos moments uniques avec notre expertise. Clip, mariage ou événement, notre équipe talentueuse réalise des contenus visuels de qualité supérieure.",
 };
 
+export const revalidate = 0;
+
 async function getPhotos(): Promise<Photo[]> {
   const data = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/photos`, {
     method: "GET",
