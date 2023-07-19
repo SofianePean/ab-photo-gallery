@@ -35,7 +35,7 @@ export const Navbar = () => {
 
   return (
     <nav
-      className={`fixed top-0 z-10 left-0 right-0 transition-opacity duration-300 ease-in-out ${
+      className={`fixed top-0 z-20 left-0 right-0 transition-opacity duration-300 ease-in-out ${
         isNavbarVisible ? "opacity-100" : "opacity-0 -translate-y-full"
       }`}
     >
