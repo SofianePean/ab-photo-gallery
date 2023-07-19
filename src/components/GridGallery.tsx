@@ -1,80 +1,27 @@
 "use client";
 
+import { Photo } from "@/app/interfaces/photo";
 import Image from "next/image";
 
-interface Photo {
-  id: number;
-  src: string;
-  description: string;
+interface GridGalleryProps {
+  photos: Photo[];
 }
 
-const GridGallery: React.FC = () => {
+const GridGallery: React.FC<GridGalleryProps> = (props) => {
+  const { photos } = props;
+
   return (
     <div className="absolute columns-1 md:columns-3 lg:columns-3 max-w-7xl lg:mt-[-150px] z-10 px-4">
-      <img alt="" className="mb-4" src="/images/grid/image1.jpg" />
-      <Image
-        width={500}
-        height={500}
-        alt=""
-        className="mb-4"
-        src="/images/grid/image2.jpg"
-      />
-      <Image
-        width={500}
-        height={500}
-        alt=""
-        className="mb-4"
-        src="/images/grid/image3.jpg"
-      />
-      <Image
-        width={500}
-        height={500}
-        alt=""
-        className="mb-4"
-        src="/images/grid/image4.jpg"
-      />
-      <Image
-        width={500}
-        height={500}
-        alt=""
-        className="mb-4"
-        src="/images/grid/image5.jpg"
-      />
-      <Image
-        width={500}
-        height={500}
-        alt=""
-        className="mb-4"
-        src="/images/grid/image6.jpg"
-      />
-      <Image
-        width={500}
-        height={500}
-        alt=""
-        className="mb-4"
-        src="/images/grid/image7.jpg"
-      />
-      <Image
-        width={500}
-        height={500}
-        alt=""
-        className="mb-4"
-        src="/images/grid/image8.jpg"
-      />
-      <Image
-        width={500}
-        height={500}
-        alt=""
-        className="mb-4"
-        src="/images/grid/image10.jpg"
-      />
-      <Image
-        width={500}
-        height={500}
-        alt=""
-        className="mb-4"
-        src="/images/grid/image11.jpg"
-      />
+      {photos.map((photo) => (
+        <Image
+          key={photo.id}
+          width={500}
+          height={500}
+          alt={photo.description}
+          className="mb-4"
+          src={`${process.env.NEXT_PUBLIC_URL_PHOTO}${photo.url}`}
+        />
+      ))}
     </div>
   );
 };
