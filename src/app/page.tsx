@@ -1,5 +1,7 @@
 import GridGallery from "@/components/GridGallery";
+import { Header } from "@/components/Header";
 import { Metadata } from "next";
+import { Category } from "./interfaces/category";
 import { Photo } from "./interfaces/photo";
 
 export const metadata: Metadata = {
@@ -19,12 +21,26 @@ async function getPhotos(): Promise<Photo[]> {
   return photos;
 }
 
+async function getCategories(): Promise<Category[]> {
+  const data = await fetch(
+    `${process.env.NEXT_PUBLIC_BASE_URL}/api/categories`,
+    {
+      method: "GET",
+    }
+  );
+  const categories = await data.json();
+
+  return categories;
+}
+
 export default async function Home() {
   const photos = await getPhotos();
+  const categories = await getCategories();
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <GridGallery photos={photos} />
+    <main className="flex min-h-screen flex-col items-center justify-between">
+      <Header />
+      <GridGallery photos={photos} categories={categories} />
     </main>
   );
 }
