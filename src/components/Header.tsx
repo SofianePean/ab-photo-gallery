@@ -5,7 +5,7 @@ interface HeaderProps {}
 
 export const Header: React.FC<HeaderProps> = (props) => {
   return (
-    <div className="w-full h-[750px] lg:h-[730px] md:w-3/3 relative">
+    <div className="w-full h-[750px] lg:h-[850px] md:w-3/3 relative">
       <Image
         src="/images/banner.jpg"
         fill

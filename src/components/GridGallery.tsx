@@ -2,7 +2,7 @@
 import { Category } from "@/app/interfaces/category";
 import { Photo } from "@/app/interfaces/photo";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CategoryFilter } from "./CategoryFilter";
 import { Icon } from "./Icon";
 
@@ -17,11 +17,12 @@ const GridGallery: React.FC<GridGalleryProps> = (props) => {
   const [photos, setPhotos] = useState<Photo[]>(props.photos);
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number>(0);
+  const [selectedCategory, setSelectedCategory] = useState<string>(ALL);
 
   const getPhotosByCategory = (id: string) => {
+    setSelectedCategory(id);
     if (id === ALL) {
       setPhotos(props.photos);
-      console.log("photos", props.photos);
     } else {
       const photosFiltered = props.photos.filter(
         (photo) => photo.category.id === id
@@ -41,20 +42,37 @@ const GridGallery: React.FC<GridGalleryProps> = (props) => {
     setSelectedPhoto(null);
   };
 
-  const handlePrevImage = (e: React.MouseEvent) => {
+  const handlePrevImage = (e: React.MouseEvent | KeyboardEvent) => {
     e.stopPropagation();
-    const prevIndex =
-      selectedPhotoIndex > 0 ? selectedPhotoIndex - 1 : photos.length - 1;
-    setSelectedPhoto(photos[prevIndex]);
-    setSelectedPhotoIndex(prevIndex);
+    setSelectedPhotoIndex((prevIndex) => {
+      const nextIndex = prevIndex > 0 ? prevIndex - 1 : photos.length - 1;
+      setSelectedPhoto(photos[nextIndex]);
+      return nextIndex;
+    });
   };
 
-  const handleNextImage = (e: React.MouseEvent) => {
+  const handleNextImage = (e: React.MouseEvent | KeyboardEvent) => {
     e.stopPropagation();
-    const nextIndex =
-      selectedPhotoIndex < photos.length - 1 ? selectedPhotoIndex + 1 : 0;
-    setSelectedPhoto(photos[nextIndex]);
-    setSelectedPhotoIndex(nextIndex);
+    setSelectedPhotoIndex((prevIndex) => {
+      const nextIndex = prevIndex < photos.length - 1 ? prevIndex + 1 : 0;
+      setSelectedPhoto(photos[nextIndex]);
+      return nextIndex;
+    });
+  };
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyUp);
+    return () => {
+      window.removeEventListener("keydown", handleKeyUp);
+    };
+  }, []);
+
+  const handleKeyUp = (e: KeyboardEvent) => {
+    if (e.key === "ArrowLeft") {
+      handlePrevImage(e);
+    } else if (e.key === "ArrowRight") {
+      handleNextImage(e);
+    }
   };
 
   return (
@@ -69,8 +87,11 @@ const GridGallery: React.FC<GridGalleryProps> = (props) => {
         {photos.map((photo, index) => (
           <div
             key={photo.id}
-            className="relative overflow-hidden mb-4"
-            onClick={() => handleImageClick(photo, index)}
+            className={`relative overflow-hidden mb-4 ${
+              selectedCategory !== ALL && photo.category.id !== selectedCategory
+                ? "hidden"
+                : ""
+            }`}
           >
             <div className="relative group">
               <Image
@@ -81,7 +102,10 @@ const GridGallery: React.FC<GridGalleryProps> = (props) => {
                 className="transform transition-transform duration-700 cursor-pointer group-hover:scale-125"
               />
 
-              <div className="absolute top-2 right-2 p-2 opacity-0 cursor-pointer transition-opacity duration-700 z-10 ease-in-out group-hover:opacity-100">
+              <div
+                className="absolute top-2 right-2 p-2 opacity-0 cursor-pointer transition-opacity duration-700 z-10 ease-in-out group-hover:opacity-100"
+                onClick={() => handleImageClick(photo, index)}
+              >
                 <Icon icon="full-screen" color="#FFFFFF" size="3em" />
               </div>
               <div className="absolute top-0 right-0 bottom-0 left-0 w-full h-full opacity-0 transition-opacity duration-700 ease-in-out bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 group-hover:opacity-50"></div>
