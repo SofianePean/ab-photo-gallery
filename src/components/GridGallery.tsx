@@ -1,6 +1,7 @@
 "use client";
 import { Category } from "@/app/interfaces/category";
 import { Photo } from "@/app/interfaces/photo";
+import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { CategoryFilter } from "./CategoryFilter";
@@ -85,13 +86,16 @@ const GridGallery: React.FC<GridGalleryProps> = (props) => {
       </div>
       <div className="columns-1 md:columns-3 lg:columns-3 max-w-7xl mt-4 px-4">
         {photos.map((photo, index) => (
-          <div
+          <motion.div
             key={photo.id}
             className={`relative overflow-hidden mb-4 ${
               selectedCategory !== ALL && photo.category.id !== selectedCategory
                 ? "hidden"
                 : ""
             }`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: index * 0.1 }}
           >
             <div className="relative group">
               <Image
@@ -110,7 +114,7 @@ const GridGallery: React.FC<GridGalleryProps> = (props) => {
               </div>
               <div className="absolute top-0 right-0 bottom-0 left-0 w-full h-full opacity-0 transition-opacity duration-700 ease-in-out bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 group-hover:opacity-50"></div>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
       {selectedPhoto && (
@@ -120,27 +124,31 @@ const GridGallery: React.FC<GridGalleryProps> = (props) => {
         >
           <div className="fixed inset-0 z-30 overflow-y-auto">
             <div className="flex min-h-full items-end items-center justify-center p-4 text-center sm:items-center sm:p-0 flex-col">
-              <div className="justify-center">
-                <Image
-                  src={`${process.env.NEXT_PUBLIC_URL_PHOTO}${selectedPhoto.url}`}
-                  alt={selectedPhoto.description}
-                  width={550}
-                  height={550}
-                  className="object-contain"
-                />
-                <div className="flex w-full justify-between">
-                  <div
-                    className="flex cursor-pointer bg-white text-black rounded-full p-2 mr-2 opacity-75 hover:opacity-100"
-                    onClick={handlePrevImage}
-                  >
-                    <Icon icon="caret-left" color="#000000" size="1.5em" />
-                  </div>
-                  <div
-                    className="cursor-pointer bg-white text-black rounded-full p-2 opacity-75 hover:opacity-100"
-                    onClick={handleNextImage}
-                  >
-                    <Icon icon="caret-right" color="#000000" size="1.5em" />
-                  </div>
+              <div className=" flex justify-center items-center">
+                <div
+                  className="cursor-pointer bg-white text-black rounded-full p-2 mr-2 opacity-75 hover:opacity-100"
+                  onClick={handlePrevImage}
+                >
+                  <Icon icon="caret-left" color="#000000" size="1.5em" />
+                </div>
+                <AnimatePresence>
+                  <motion.img
+                    key={selectedPhoto.url}
+                    src={`${process.env.NEXT_PUBLIC_URL_PHOTO}${selectedPhoto.url}`}
+                    initial={{ x: 300, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: -300, opacity: 0 }}
+                    className="object-contain"
+                    width={550}
+                    height={550}
+                  />
+                </AnimatePresence>
+
+                <div
+                  className="cursor-pointer bg-white text-black rounded-full p-2 opacity-75 hover:opacity-100"
+                  onClick={handleNextImage}
+                >
+                  <Icon icon="caret-right" color="#000000" size="1.5em" />
                 </div>
               </div>
 
