@@ -3,7 +3,8 @@ import { Category } from "@/app/interfaces/category";
 import { Photo } from "@/app/interfaces/photo";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { wrap } from "popmotion";
+import { useState } from "react";
 import { CategoryFilter } from "./CategoryFilter";
 import { Icon } from "./Icon";
 
@@ -19,6 +20,7 @@ const GridGallery: React.FC<GridGalleryProps> = (props) => {
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number>(0);
   const [selectedCategory, setSelectedCategory] = useState<string>(ALL);
+  const [[page, direction], setPage] = useState([0, 0]);
 
   const getPhotosByCategory = (id: string) => {
     setSelectedCategory(id);
@@ -45,35 +47,64 @@ const GridGallery: React.FC<GridGalleryProps> = (props) => {
 
   const handlePrevImage = (e: React.MouseEvent | KeyboardEvent) => {
     e.stopPropagation();
-    setSelectedPhotoIndex((prevIndex) => {
-      const nextIndex = prevIndex > 0 ? prevIndex - 1 : photos.length - 1;
-      setSelectedPhoto(photos[nextIndex]);
-      return nextIndex;
-    });
+    paginate(-1);
   };
 
   const handleNextImage = (e: React.MouseEvent | KeyboardEvent) => {
     e.stopPropagation();
-    setSelectedPhotoIndex((prevIndex) => {
-      const nextIndex = prevIndex < photos.length - 1 ? prevIndex + 1 : 0;
-      setSelectedPhoto(photos[nextIndex]);
-      return nextIndex;
-    });
+    console.log("next");
+    paginate(1);
   };
 
-  useEffect(() => {
-    window.addEventListener("keydown", handleKeyUp);
-    return () => {
-      window.removeEventListener("keydown", handleKeyUp);
-    };
-  }, []);
+  // useEffect(() => {
+  //   window.addEventListener("keydown", handleKeyUp);
+  //   return () => {
+  //     window.removeEventListener("keydown", handleKeyUp);
+  //   };
+  // }, []);
 
-  const handleKeyUp = (e: KeyboardEvent) => {
-    if (e.key === "ArrowLeft") {
-      handlePrevImage(e);
-    } else if (e.key === "ArrowRight") {
-      handleNextImage(e);
-    }
+  // const handleKeyUp = (e: KeyboardEvent) => {
+  //   if (e.key === "ArrowLeft") {
+  //     handlePrevImage(e);
+  //   } else if (e.key === "ArrowRight") {
+  //     handleNextImage(e);
+  //   }
+  // };
+
+  const swipeConfidenceThreshold = 10000;
+  const swipePower = (offset: number, velocity: number) => {
+    return Math.abs(offset) * velocity;
+  };
+
+  const variants = {
+    enter: (direction: number) => {
+      return {
+        x: direction > 0 ? 1000 : -1000,
+        opacity: 0,
+      };
+    },
+    center: {
+      zIndex: 1,
+      x: 0,
+      opacity: 1,
+    },
+    exit: (direction: number) => {
+      return {
+        zIndex: 0,
+        x: direction < 0 ? 1000 : -1000,
+        opacity: 0,
+      };
+    },
+  };
+
+  const getUrlImage = (index: number) => {
+    const url = photos[imageIndex].url;
+    return `${process.env.NEXT_PUBLIC_URL_PHOTO}${url}`;
+  };
+  const imageIndex = wrap(0, photos.length, page);
+
+  const paginate = (newDirection: number) => {
+    setPage([page + newDirection, newDirection]);
   };
 
   return (
@@ -119,33 +150,56 @@ const GridGallery: React.FC<GridGalleryProps> = (props) => {
       </div>
       {selectedPhoto && (
         <div
-          className="fixed inset-0 bg-gray-500 bg-opacity-75 z-25 transition-opacity"
+          className="fixed inset-0 bg-gray-500 overflow-hidden bg-opacity-75 z-25 transition-opacity"
           onClick={handleCloseOverlay}
         >
           <div className="fixed inset-0 z-30 overflow-y-auto">
             <div className="flex min-h-full items-end items-center justify-center p-4 text-center sm:items-center sm:p-0 flex-col">
               <div className=" flex justify-center items-center">
                 <div
-                  className="cursor-pointer bg-white text-black rounded-full p-2 mr-2 opacity-75 hover:opacity-100"
+                  className="cursor-pointer bg-white text-black hidden lg:inline rounded-full p-2 mr-2 opacity-75 hover:opacity-100"
                   onClick={handlePrevImage}
                 >
                   <Icon icon="caret-left" color="#000000" size="1.5em" />
                 </div>
-                <AnimatePresence>
-                  <motion.img
-                    key={selectedPhoto.url}
-                    src={`${process.env.NEXT_PUBLIC_URL_PHOTO}${selectedPhoto.url}`}
-                    initial={{ x: 300, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: -300, opacity: 0 }}
-                    className="object-contain"
-                    width={550}
-                    height={550}
-                  />
+                <AnimatePresence initial={false} custom={direction}>
+                  <motion.div
+                    custom={direction}
+                    key={page}
+                    variants={variants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{
+                      x: { type: "spring", stiffness: 300, damping: 30 },
+                      opacity: { duration: 0.2 },
+                    }}
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    dragElastic={1}
+                    onDragEnd={(e, { offset, velocity }) => {
+                      const swipe = swipePower(offset.x, velocity.x);
+
+                      if (swipe < -swipeConfidenceThreshold) {
+                        paginate(1);
+                      } else if (swipe > swipeConfidenceThreshold) {
+                        paginate(-1);
+                      }
+                    }}
+                  >
+                    <Image
+                      key={photos[imageIndex].id}
+                      src={getUrlImage(imageIndex)}
+                      alt={photos[imageIndex].description}
+                      width={550}
+                      height={550}
+                      className="object-contain"
+                    />
+                  </motion.div>
                 </AnimatePresence>
 
                 <div
-                  className="cursor-pointer bg-white text-black rounded-full p-2 opacity-75 hover:opacity-100"
+                  className="cursor-pointer hidden lg:inline bg-white text-black rounded-full p-2 opacity-75 hover:opacity-100"
                   onClick={handleNextImage}
                 >
                   <Icon icon="caret-right" color="#000000" size="1.5em" />
